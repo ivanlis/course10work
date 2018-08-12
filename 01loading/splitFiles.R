@@ -3,7 +3,7 @@ files <- list.files(path = "../materials/datasets/final/en_US",
                     full.names = TRUE, 
                     recursive = FALSE)
 
-maxLines <- 500000
+maxLines <- 250000
 outputDir <- "../materials/datasets/english_split"
 
 cnt <- 0

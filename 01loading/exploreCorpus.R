@@ -21,8 +21,8 @@ files <- list.files(path = "../materials/datasets/english_split",
 
 cnt <- 0
 
-#for (f in files)
-for (f in files[1])
+for (f in files)
+#for (f in files[1])
 {
     cat("Creating corpus", cnt, "from", f, "...\n")
     partCorpus <- corpus(readtext(f, cache = FALSE, verbosity = 3))

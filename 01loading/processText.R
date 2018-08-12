@@ -26,7 +26,8 @@ processText <- function(textDirectory = defaultTextDirectory,
                         tokensDirectory = defaultTokensDirectory,
                         matrixDirectory = defaultMatrixDirectory,
                         buildTokens = FALSE,
-                        buildMatrices = TRUE)
+                        buildMatrices = TRUE,
+                        mergeMatrices = FALSE)
 {
     resultMatrix <- NA
     
@@ -103,20 +104,60 @@ processText <- function(textDirectory = defaultTextDirectory,
             close(tokFile)
             cat("Tokens for id=", cnt, "read.\n")
             
-            if (!is.dfm(resultMatrix))
-                resultMatrix <- buildMatrix(toks, cnt, matrixDirectory)
-            else
-                resultMatrix <- rbind(resultMatrix, buildMatrix(toks, cnt, matrixDirectory))
+            # store matrix only, do not accumulate them
+            buildMatrix(toks, cnt, matrixDirectory)
+            rm(toks)
+            
+            #newMatrix <- buildMatrix(toks, cnt, matrixDirectory)
+            #rm(toks)
+            #
+            #if (!is.dfm(resultMatrix))
+            #{
+            #    #resultMatrix <- buildMatrix(toks, cnt, matrixDirectory)
+            #    resultMatrix <- newMatrix
+            #}
+            #else
+            #{
+            #    #resultMatrix <- rbind(resultMatrix, buildMatrix(toks, cnt, matrixDirectory))
+            #    resultMatrix <- rbind(resultMatrix, newMatrix)
+            #}
+            #rm(newMatrix)
+            #
+            #dim(resultMatrix)
             
             cnt <- cnt + 1
         }
     }    
     
     
-    if (!buildMatrices)
+    if (mergeMatrices)
     {
-        cat("Building DFM from stored partial DFMs...")
-        #TODO: implement
+        cat("Building overall DFM from saved DFMs, directory", matrixDirectory, "...\n")
+        files <- list.files(matrixDirectory, 
+                            pattern = "dfm_.*.dat", 
+                            full.names = TRUE,
+                            recursive = FALSE)
+        
+        cnt <- 0
+        
+        for (f in files)
+        {
+            matrFile <- file(f, "r")
+            cat("Reading DFM for id=", cnt, "from", f, "...\n")
+            newMatrix <- unserialize(matrFile)
+            close(matrFile)
+            cat("DFM for id=", cnt, "read.\n")
+            
+            if (is.dfm(resultMatrix))
+                resultMatrix <- rbind(resultMatrix, newMatrix)
+            else
+                resultMatrix <- newMatrix
+            
+            rm(newMatrix)
+            
+            cat("Iteration ", cnt, ":  dim(resultMatrix) =", dim(resultMatrix), "\n")
+            cnt <- cnt + 1
+        }
     }
     
     resultMatrix

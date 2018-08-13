@@ -166,3 +166,13 @@ processText <- function(textDirectory = defaultTextDirectory,
 
 # toksFiltered <- tokens_remove(toks, "[0-9]", valuetype = "regex", verbose=3)
 
+
+# Ideas
+# 1. Remove words containing numbers.
+# 2. Remove profane words.
+# Maybe
+# 1. Remove plurals etc.
+# 2. Remove words from other languages.
+# 3. Remove proper names etc.
+# 4. Substitute constructs like I'll, you're, we'd etc.
+

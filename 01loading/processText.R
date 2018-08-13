@@ -162,3 +162,7 @@ processText <- function(textDirectory = defaultTextDirectory,
     
     resultMatrix
 }
+
+
+# toksFiltered <- tokens_remove(toks, "[0-9]", valuetype = "regex", verbose=3)
+

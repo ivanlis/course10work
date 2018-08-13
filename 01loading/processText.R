@@ -38,6 +38,8 @@ processText <- function(textDirectory = defaultTextDirectory,
                             pattern = "*.txt", 
                             full.names = TRUE, 
                             recursive = FALSE)
+        cnt <- 0
+        
         for (f in files)
         {
             cat("Creating corpus", cnt, "from", f, "...\n")
@@ -58,6 +60,9 @@ processText <- function(textDirectory = defaultTextDirectory,
             ))
             cat("Corpus", cnt, "tokenized.\n")
             
+            cat("Removing number containing words from tokens...\n")
+            toks <- tokens_remove(toks, "[0-9]", valuetype = "regex", verbose=3)
+            
             tokFileName <- sprintf("%s/tokens_%02d.dat", tokensDirectory, cnt)
             tokFile <- file(tokFileName, "w")
             cat("Saving tokens to file ", tokFileName, "\n")
@@ -69,15 +74,9 @@ processText <- function(textDirectory = defaultTextDirectory,
             # build DFMs if needed
             if (buildMatrices)
             {
-                #dfMatr <- dfm(toks)
-                #matrFileName <- sprintf("%s/dfm_%02d.dat", matrixDirectory, cnt)
-                #matrFile <- file(matrFileName, "w")
-                #serialize(dfMatr, matrFile)
-                #close(matrFile)
-                if (!is.dfm(resultMatrix))
-                    resultMatrix <- buildMatrix(toks, cnt, matrixDirectory)
-                else
-                    resultMatrix <- rbind(resultMatrix, buildMatrix(toks, cnt, matrixDirectory))
+                # store matrix only, do not accumulate them
+                buildMatrix(toks, cnt, matrixDirectory)
+                rm(toks)
             }
             
             cnt <- cnt + 1

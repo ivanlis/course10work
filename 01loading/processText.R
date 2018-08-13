@@ -51,6 +51,7 @@ processText <- function(textDirectory = defaultTextDirectory,
             
             # Now, tokenize this corpus
             cat("Tokenizing corpus", cnt, "...\n")
+            #TODO: think on not removing things here, but later...
             toks <- tokens_tolower(tokens(partCorpus, what = "word", 
                                           remove_numbers = TRUE, 
                                           remove_punct = TRUE,

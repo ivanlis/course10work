@@ -1,4 +1,5 @@
 # defaults
+defaultDatasetsDirectory <- "../materials/datasets"
 defaultTextDirectory <- "../materials/datasets/english_split"
 defaultTokensDirectory <- "./results"
 defaultMatrixDirectory <- "./results"
@@ -25,6 +26,7 @@ buildMatrix <- function(toks, cnt = 0, matrixDirectory = ".")
 processText <- function(textDirectory = defaultTextDirectory,
                         tokensDirectory = defaultTokensDirectory,
                         matrixDirectory = defaultMatrixDirectory,
+                        datasetsDirectory = defaultDatasetsDirectory,
                         buildTokens = FALSE,
                         buildMatrices = TRUE,
                         mergeMatrices = FALSE)
@@ -38,6 +40,9 @@ processText <- function(textDirectory = defaultTextDirectory,
                             pattern = "*.txt", 
                             full.names = TRUE, 
                             recursive = FALSE)
+        # list of profane words to filter them out
+        badWords <- readLines(sprintf("%s/bad-words.txt", datasetsDirectory))
+        
         cnt <- 0
         
         for (f in files)
@@ -63,6 +68,8 @@ processText <- function(textDirectory = defaultTextDirectory,
             
             cat("Removing number containing words from tokens...\n")
             toks <- tokens_remove(toks, "[0-9]", valuetype = "regex", verbose=3)
+            cat("Removing profane words...\n")
+            toks <- tokens_remove(toks, badWords, valuetype = "fixed", verbose=3)
             
             tokFileName <- sprintf("%s/tokens_%02d.dat", tokensDirectory, cnt)
             tokFile <- file(tokFileName, "w")
@@ -176,3 +183,5 @@ processText <- function(textDirectory = defaultTextDirectory,
 # 3. Remove proper names etc.
 # 4. Substitute constructs like I'll, you're, we'd etc.
 
+
+# https://www.cs.cmu.edu/~biglou/resources/

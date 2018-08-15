@@ -184,8 +184,11 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
     if (mergeMatrices)
     {
         cat("Building overall DFM from saved DFMs, directory", matrixDirectory, "...\n")
-        for (ngramType in 1:3)
+        #for (ngramType in 1:3)
+        for (ngramType in 2:3)
         {
+            resultMatrix <- NA
+            
             files <- list.files(matrixDirectory, 
                                 pattern = sprintf("dfm%d_.*.dat", ngramType), 
                                 full.names = TRUE,
@@ -215,11 +218,12 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
             
             genMatrFileName <- sprintf("%s/generalDfm%d.dat", 
                                        matrixDirectory, ngramType)
-            genMatrFile <- file(genMatrFile, "w")
+            genMatrFile <- file(genMatrFileName, "w")
             cat("Saving general DFM for ngramType = ", ngramType, "...\n")
             serialize(resultMatrix, genMatrFile)
             close(genMatrFile)
             cat("General DFM for ngramType = ", ngramType, "saved.\n")
+            rm(resultMatrix)
         }
     }
 }

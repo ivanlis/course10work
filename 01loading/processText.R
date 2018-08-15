@@ -41,7 +41,8 @@ processText <- function(textDirectory = defaultTextDirectory,
                             full.names = TRUE, 
                             recursive = FALSE)
         # list of profane words to filter them out
-        badWords <- readLines(sprintf("%s/bad-words-edited.txt", datasetsDirectory))
+        #badWords <- readLines(sprintf("%s/bad-words-edited.txt", datasetsDirectory))
+        badWords <- readLines("../misc/bad-words-edited.txt")
         
         cnt <- 0
         

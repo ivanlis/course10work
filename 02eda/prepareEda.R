@@ -87,13 +87,32 @@ buildTokens <- function(tokSource,
     toks
 }
 
+filterMatrix <- function(matr, cnt = 0, keepTokens = 0.9, matrixDirectory = ".", 
+                         ngramType = 1)
+{
+    matr <- dfm_sort(matr)
+    counts <- colSums(matr)
+    threshold <- sum(counts) * keepTokens
+    lastIndex <- sum(cumsum(counts) < threshold) + 1
+    
+    
+    cat("Filtering matrix,", keepTokens, "<->", threshold, "last index =", lastIndex, "\n")
+    matr <- matr[, 1:lastIndex]
+    
+    fmatrCon <- file(sprintf("%s/filtered_dfm%d_%02d.dat", matrixDirectory, ngramType, cnt), "w")
+    serialize(matr, fmatrCon)
+    close(fmatrCon)
+}
+
 prepareEda <- function(textDirectory = defaultTextDirectory,
                         tokensDirectory = defaultTokensDirectory,
                         matrixDirectory = defaultMatrixDirectory,
                         datasetsDirectory = defaultDatasetsDirectory,
                         buildTokens = FALSE,
                         buildMatrices = TRUE,
-                        mergeMatrices = FALSE)
+                        mergeMatrices = FALSE,
+                        mergeFiltered = TRUE,
+                        filterSteps = c(3, 8, 14))
 {
     resultMatrix <- NA
     
@@ -185,7 +204,7 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
     {
         cat("Building overall DFM from saved DFMs, directory", matrixDirectory, "...\n")
         #for (ngramType in 1:3)
-        for (ngramType in 2:3)
+        for (ngramType in 3:3)
         {
             resultMatrix <- NA
             
@@ -204,8 +223,15 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
                 close(matrFile)
                 cat("DFM for id=", cnt, "read.\n")
                 
+                cat("Grouping all rows...\n")
+                newMatrix <- dfm_group(newMatrix, groups = rep(1, nrow(newMatrix)))
+                cat("All rows grouped.\n")
+                
                 if (is.dfm(resultMatrix))
+                {
                     resultMatrix <- rbind(resultMatrix, newMatrix)
+                    resultMatrix <- dfm_group(resultMatrix, groups = rep(1, nrow(resultMatrix)))
+                }
                 else
                     resultMatrix <- newMatrix
                 
@@ -213,9 +239,75 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
                 
                 cat("Iteration ", cnt, ", ngramType =", ngramType, 
                     ":  dim(resultMatrix) =", dim(resultMatrix), "\n")
+                
+                
+                if (ngramType == 3 && cnt %in% c(filterSteps, length(files) - 1))
+                {
+                    filterMatrix(resultMatrix, cnt, keepTokens = 0.6, 
+                                 matrixDirectory = matrixDirectory, 
+                                 ngramType = ngramType)
+                    resultMatrix <- NA
+                }
+                
+                
                 cnt <- cnt + 1
             }
             
+            if (is.dfm(resultMatrix))
+            {
+                genMatrFileName <- sprintf("%s/generalDfm%d.dat", 
+                                           matrixDirectory, ngramType)
+                genMatrFile <- file(genMatrFileName, "w")
+                cat("Saving general DFM for ngramType = ", ngramType, "...\n")
+                serialize(resultMatrix, genMatrFile)
+                close(genMatrFile)
+                cat("General DFM for ngramType = ", ngramType, "saved.\n")
+                rm(resultMatrix)
+            }
+        }
+    }
+    
+    if (mergeFiltered)
+    {
+        ngramType = 3
+        
+        resultMatrix <- NA
+        
+        files <- list.files(matrixDirectory, 
+                            pattern = sprintf("filtered_dfm%d_.*.dat", ngramType), 
+                            full.names = TRUE,
+                            recursive = FALSE)   
+        cnt <- 0
+        for (f in files)
+        {
+            matrFile <- file(f, "r")
+            cat("Reading DFM for id=", cnt, "from", f, "...\n")
+            newMatrix <- unserialize(matrFile)
+            close(matrFile)
+            cat("DFM for id=", cnt, "read.\n")
+            
+            cat("Grouping all rows...\n")
+            newMatrix <- dfm_group(newMatrix, groups = rep(1, nrow(newMatrix)))
+            cat("All rows grouped.\n")
+            
+            if (is.dfm(resultMatrix))
+            {
+                resultMatrix <- rbind(resultMatrix, newMatrix)
+                resultMatrix <- dfm_group(resultMatrix, groups = rep(1, nrow(resultMatrix)))
+            }
+            else
+                resultMatrix <- newMatrix
+            
+            rm(newMatrix)
+            
+            cat("Iteration ", cnt, ", ngramType =", ngramType, 
+                ":  dim(resultMatrix) =", dim(resultMatrix), "\n")
+            cnt <- cnt + 1
+        }
+        
+        
+        if (is.dfm(resultMatrix))
+        {
             genMatrFileName <- sprintf("%s/generalDfm%d.dat", 
                                        matrixDirectory, ngramType)
             genMatrFile <- file(genMatrFileName, "w")
@@ -224,8 +316,10 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
             close(genMatrFile)
             cat("General DFM for ngramType = ", ngramType, "saved.\n")
             rm(resultMatrix)
-        }
-    }
+        }        
+        
+    }    
+    
 }
 
 

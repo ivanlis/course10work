@@ -1,0 +1,70 @@
+---
+title: "Analysis of N-Gram Frequencies"
+author: "Ivan Lysiuchenko"
+date: "August 19, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE, message=FALSE}
+library(quanteda)
+library(ggplot2)
+```
+
+## Extracting Frequency Information
+
+We suppose that the document-feature matrices for our corpora are already computed
+and stored in a specific place (see the code).
+
+This is the function we use to extract the vector of frequencies. Frequencies are sorted 
+in descending order.
+
+```{r message=FALSE}
+loadFrequencies <- function(pathName, freqPathname, update = FALSE)
+{
+    if (!file.exists(freqPathname) || update)
+    {
+        matrCon <- file(pathName, "r")
+        partMatr <- unserialize(matrCon)
+        close(matrCon)
+        # group all the rows, just in case
+        partMatr <- dfm_group(partMatr, groups = rep(1, nrow(partMatr)))
+        # sort the features by frequency
+        partMatr <- dfm_sort(partMatr);
+        
+        freqs <- colSums(partMatr)
+        freqCon <- file(freqPathname, "w")
+        serialize(freqs, freqCon)
+        close(freqCon)
+        
+        freqs
+    }
+    else
+    {
+        freqCon <- file(freqPathname, "r")
+        freqs <- unserialize(freqCon)
+        close(freqCon)
+        
+        freqs
+    }
+}
+```
+
+## Frequencies of words, bigrams and trigrams in the entire corpus
+
+Here we explore how frequently different terms occur in the merged corpus
+comprising the texts from blogs, news and twits.
+Let's take a look at words first.
+
+```{r message=FALSE}
+freqs <- loadFrequencies("../results/dfm/generalDfm1.dat", "../results/dfm/freq1.dat")
+#freqCon <- file("../results/dfm/freq1.dat", "w")
+#serialize(freqs, freqCon)
+#close(freqCon)
+
+dsize <- length(freqs); g <- ggplot(data = data.frame(x = 1:dsize, y = log(freqs[1:dsize])), mapping = aes(x = x, y = y)) + geom_line()
+```
+

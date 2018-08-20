@@ -53,7 +53,7 @@ buildTokens <- function(tokSource,
                                replacement = rep(";;;censored;;;", length(badWords)), 
                                verbose=3)
         
-        tokFileName <- sprintf("%s/rawtokens_%02d.txt", tokensDirectory, cnt)
+        tokFileName <- sprintf("%s/rawtokens_%02d.dat", tokensDirectory, cnt)
     }
     else
     {
@@ -75,7 +75,7 @@ buildTokens <- function(tokSource,
         cat("Removing profane words...\n")
         toks <- tokens_remove(toks, ";;;censored;;;", valuetype = "regex", verbose=3)        
         
-        tokFileName <- sprintf("%s/tokens%d_%02d.txt", tokensDirectory, ngramType, cnt)
+        tokFileName <- sprintf("%s/tokens%d_%02d.dat", tokensDirectory, ngramType, cnt)
     }
     
     cat("Saving tokens to file ", tokFileName, "\n")
@@ -325,10 +325,9 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
 
 # toksFiltered <- tokens_remove(toks, "[0-9]", valuetype = "regex", verbose=3)
 
+#TODO:
+# 1. Detect wery rare words. Remove 2- and 3-grams with their presence.
 
-# Ideas
-# 1. Remove words containing numbers.
-# 2. Remove profane words.
 # Maybe
 # 1. Remove plurals etc.
 # 2. Remove words from other languages.

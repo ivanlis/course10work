@@ -65,6 +65,34 @@ freqs <- loadFrequencies("../results/dfm/generalDfm1.dat", "../results/dfm/freq1
 #serialize(freqs, freqCon)
 #close(freqCon)
 
-dsize <- length(freqs); g <- ggplot(data = data.frame(x = 1:dsize, y = log(freqs[1:dsize])), mapping = aes(x = x, y = y)) + geom_line()
+# Look for 50% and 90%
+threshold50 <- 0.5 * sum(freqs)
+threshold90 <- 0.9 * sum(freqs)
+
+sufficient50 <- sum(cumsum(freqs) < threshold50) + 1
+sufficient90 <- sum(cumsum(freqs) < threshold90) + 1
+
+#dsize <- length(freqs)
+dsize <- min(sufficient90 + 100, length(freqs))
+g <- ggplot(data = data.frame(x = 1:dsize, y = log(freqs[1:dsize])), 
+                                    mapping = aes(x = x, y = y)) + geom_line() +
+    geom_vline(xintercept = sufficient50) + geom_vline(xintercept = sufficient90)
 ```
 
+
+```{r}
+freqs <- loadFrequencies("../results/dfm/generalDfm2.dat", "../results/dfm/freq2.dat")
+
+# Look for 50% and 90%
+threshold50 <- 0.5 * sum(freqs)
+threshold90 <- 0.9 * sum(freqs)
+
+sufficient50 <- sum(cumsum(freqs) < threshold50) + 1
+sufficient90 <- sum(cumsum(freqs) < threshold90) + 1
+
+#dsize <- length(freqs)
+dsize <- min(sufficient90 + 100, length(freqs))
+g <- ggplot(data = data.frame(x = 1:dsize, y = log(freqs[1:dsize])), 
+                                    mapping = aes(x = x, y = y)) + geom_line() +
+    geom_vline(xintercept = sufficient50) + geom_vline(xintercept = sufficient90)
+```

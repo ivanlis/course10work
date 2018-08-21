@@ -59,7 +59,7 @@ Here we explore how frequently different terms occur in the merged corpus
 comprising the texts from blogs, news and twits.
 Let's take a look at words first.
 
-```{r message=FALSE}
+```{r message=FALSE, echo=FALSE}
 freqs <- loadFrequencies("../results/dfm/generalDfm1.dat", "../results/dfm/freq1.dat")
 #freqCon <- file("../results/dfm/freq1.dat", "w")
 #serialize(freqs, freqCon)
@@ -74,13 +74,29 @@ sufficient90 <- sum(cumsum(freqs) < threshold90) + 1
 
 #dsize <- length(freqs)
 dsize <- min(sufficient90 + 100, length(freqs))
-g <- ggplot(data = data.frame(x = 1:dsize, y = log(freqs[1:dsize])), 
-                                    mapping = aes(x = x, y = y)) + geom_line() +
-    geom_vline(xintercept = sufficient50) + geom_vline(xintercept = sufficient90)
+g <- ggplot(data = data.frame(x = log(1:dsize), y = log(freqs[1:dsize])), 
+                                    mapping = aes(x = x, y = y, color = "red")) + 
+    geom_line() +
+    geom_vline(xintercept = log(sufficient50), color = "red") + 
+    geom_vline(xintercept = log(sufficient90), color = "red") +
+    labs(x = "log(num. feature)", y = "log(count)")
+```
+
+The most frequent words are the following:
+
+```{r echo=FALSE}
+head(freqs, 20)
+```
+
+Examples of unfrequent words:
+
+```{r echo=FALSE}
+tail(freqs, 10)
 ```
 
 
-```{r}
+
+```{r message=FALSE, echo=FALSE}
 freqs <- loadFrequencies("../results/dfm/generalDfm2.dat", "../results/dfm/freq2.dat")
 
 # Look for 50% and 90%
@@ -92,7 +108,63 @@ sufficient90 <- sum(cumsum(freqs) < threshold90) + 1
 
 #dsize <- length(freqs)
 dsize <- min(sufficient90 + 100, length(freqs))
-g <- ggplot(data = data.frame(x = 1:dsize, y = log(freqs[1:dsize])), 
-                                    mapping = aes(x = x, y = y)) + geom_line() +
-    geom_vline(xintercept = sufficient50) + geom_vline(xintercept = sufficient90)
+#g <- ggplot(data = data.frame(x = 1:dsize, y = log(freqs[1:dsize])), 
+#                                    mapping = aes(x = x, y = y), color = "blue") + 
+#    geom_line() +
+#    geom_vline(xintercept = sufficient50) + geom_vline(xintercept = sufficient90)
+
+g <- g + geom_line(data = data.frame(x = log(1:dsize), y = log(freqs[1:dsize])), 
+                                    mapping = aes(x = x, y = y), color = "blue") +
+    geom_vline(xintercept = log(sufficient50), color = "blue") + 
+    geom_vline(xintercept = log(sufficient90), color = "blue")
+```
+
+The most frequent bigrams are the following:
+
+```{r  message=FALSE, echo=FALSE}
+head(freqs, 20)
+```
+
+Examples of unfrequent bigrams:
+
+```{r message=FALSE, echo=FALSE}
+tail(freqs, 10)
+```
+
+```{r message=FALSE, echo=FALSE}
+freqs <- loadFrequencies("../results/dfm/generalDfm3.dat", "../results/dfm/freq3.dat")
+
+## Look for 50% and 90%
+#threshold50 <- 0.5 * sum(freqs)
+#threshold90 <- 0.9 * sum(freqs)
+#
+#sufficient50 <- sum(cumsum(freqs) < threshold50) + 1
+#sufficient90 <- sum(cumsum(freqs) < threshold90) + 1
+
+#dsize <- length(freqs)
+# at the moment, the sufficient90 for bigrams
+dsize <- min(sufficient90 + 100, length(freqs))
+
+g <- g + geom_line(data = data.frame(x = log(1:dsize), y = log(freqs[1:dsize])), 
+                                    mapping = aes(x = x, y = y), color = "green")
+```
+
+The most frequent trigrams are the following:
+
+```{r  message=FALSE, echo=FALSE}
+head(freqs, 20)
+```
+
+Among our fitered trigrams, these are the less frequent:
+
+```{r message=FALSE, echo=FALSE}
+tail(freqs, 10)
+```
+
+Let's show the frequencies of the words, bigrams and trigrams on the same graph,
+using a logarithmic scale.
+
+```{r echo=FALSE}
+rm(freqs)
+g
 ```

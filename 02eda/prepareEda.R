@@ -203,8 +203,8 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
     if (mergeMatrices)
     {
         cat("Building overall DFM from saved DFMs, directory", matrixDirectory, "...\n")
-        #for (ngramType in 1:3)
-        for (ngramType in 3:3)
+        for (ngramType in 1:3)
+        #for (ngramType in 3:3)
         {
             resultMatrix <- NA
             

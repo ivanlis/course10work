@@ -82,6 +82,8 @@ g <- ggplot(data = data.frame(x = log(1:dsize), y = log(freqs[1:dsize])),
     labs(x = "log(num. feature)", y = "log(count)")
 ```
 
+Our preprocessing step detected `r length(freqs)` different words. 
+All of them account for `r sum(freqs)` entries.
 The most frequent words are the following:
 
 ```{r echo=FALSE}
@@ -94,6 +96,8 @@ Examples of unfrequent words:
 tail(freqs, 10)
 ```
 
+It turns out that to cover 90% of all word usages we need to keep `r sufficient90` of the most frequent words.
+50% is covered by `r sufficient50` of them.
 
 
 ```{r message=FALSE, echo=FALSE}
@@ -119,6 +123,8 @@ g <- g + geom_line(data = data.frame(x = log(1:dsize), y = log(freqs[1:dsize])),
     geom_vline(xintercept = log(sufficient90), color = "blue")
 ```
 
+The number of different bigrams is `r length(freqs)`, the overall number of their entries is `r sum(freqs)`.
+90% and 50% of the entries correspond to `r sufficient90` and `r sufficient50` most frequent bigrams.
 The most frequent bigrams are the following:
 
 ```{r  message=FALSE, echo=FALSE}
@@ -149,6 +155,8 @@ g <- g + geom_line(data = data.frame(x = log(1:dsize), y = log(freqs[1:dsize])),
                                     mapping = aes(x = x, y = y), color = "green")
 ```
 
+At the preprocessing step we filtered out the less frequent trigrams.
+Now we keep `r length(freqs)` of different features. These features account for `r sum(freqs)` entries.
 The most frequent trigrams are the following:
 
 ```{r  message=FALSE, echo=FALSE}

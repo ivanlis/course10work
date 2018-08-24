@@ -1,0 +1,75 @@
+---
+title: "Building Tables"
+author: "Ivan Lysiuchenko"
+date: "August 24, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE, message=FALSE}
+library(data.table)
+```
+
+## Unigrams
+
+```{r}
+source("loadFrequencies.R")
+if (!dir.exists("../results/tables"))
+    dir.create("../results/tables")
+
+freqs <- loadFrequencies("../results/dfm/generalDfm1.dat", "../results/dfm/freq1.dat")
+#TODO: limit
+K1 <- length(freqs)
+tableWord <- data.table(id = 1:K1, 
+                        word = names(freqs[1:K1]), probability = freqs[1:K1])
+setkey(tableWord, id)
+rm(freqs)
+write.csv(tableWord, "../results/tables/tableWords.csv")
+#rm(tableWord)
+```
+
+## Bigrams
+
+```{r}
+freqs <- loadFrequencies("../results/dfm/generalDfm2.dat", "../results/dfm/freq2.dat")
+freqs <- data.table(term1 = sapply(names(freqs), 
+                                   function(el){
+                                       splitRes <- strsplit(el, "_")[[1]]
+                                       if (length(splitRes) != 2)
+                                           ""
+                                       else
+                                           splitRes[1]
+                                   }, USE.NAMES = FALSE),
+                    term2 = sapply(names(freqs), 
+                                   function(el){
+                                       splitRes <- strsplit(el, "_")[[1]]
+                                       if (length(splitRes) != 2)
+                                           ""
+                                       else
+                                           splitRes[2]
+                                    }, USE.NAMES = FALSE),
+                    probability = freqs)
+setkey(freqs, term1, term2)
+print("Table freqs for 2-grams created. Rows: ", nrow(freqs), "\n")
+# remove rows with empty terms resulting from extra underscores like ___cat or dog___
+freqs <- freqs[nchar(term1) > 0 & nchar(term2) > 0]
+print("Table freqs for 2-grams. Rows after cleaning up: ", nrow(freqs), "\n")
+K2 <- 10
+#TODO: think on filtering policy
+freqs <- freqs[order(-probability), .SD[1:min(K2, .N)], by = .(term1)]
+freqs <- merge(freqs, tableWord[, .(id, word)], by.x = "term1", by.y = "word")
+setnames(freqs, old = c("probability.x", "id"), new = c("probability", "id1"))
+freqs <- freqs[,-c("term1", "probability.y")]
+freqs <- merge(freqs, tableWord[, .(id, word)], by.x = "term2", by.y = "word")
+setnames(freqs, old = c("id"), new = c("id2"))
+freqs <- freqs[, -c("term2")]
+setkey(freqs, id1, id2)
+tableBigram <- freqs
+rm(freqs)
+
+#tableBigram <- data.table(id1 = tableWord[word == , id]
+#                              )
+```

@@ -53,16 +53,16 @@ freqs <- data.table(term1 = sapply(names(freqs),
                                     }, USE.NAMES = FALSE),
                     probability = freqs)
 setkey(freqs, term1, term2)
-print("Table freqs for 2-grams created. Rows: ", nrow(freqs), "\n")
+#print("Table freqs for 2-grams created. Rows: ", nrow(freqs), "\n")
 # remove rows with empty terms resulting from extra underscores like ___cat or dog___
 freqs <- freqs[nchar(term1) > 0 & nchar(term2) > 0]
-print("Table freqs for 2-grams. Rows after cleaning up: ", nrow(freqs), "\n")
+#print("Table freqs for 2-grams. Rows after cleaning up: ", nrow(freqs), "\n")
 K2 <- 10
 #TODO: think on filtering policy
 freqs <- freqs[order(-probability), .SD[1:min(K2, .N)], by = .(term1)]
 freqs <- merge(freqs, tableWord[, .(id, word)], by.x = "term1", by.y = "word")
-setnames(freqs, old = c("probability.x", "id"), new = c("probability", "id1"))
-freqs <- freqs[,-c("term1", "probability.y")]
+setnames(freqs, old = c("id"), new = c("id1"))
+freqs <- freqs[,-c("term1")]
 freqs <- merge(freqs, tableWord[, .(id, word)], by.x = "term2", by.y = "word")
 setnames(freqs, old = c("id"), new = c("id2"))
 freqs <- freqs[, -c("term2")]
@@ -70,6 +70,5 @@ setkey(freqs, id1, id2)
 tableBigram <- freqs
 rm(freqs)
 
-#tableBigram <- data.table(id1 = tableWord[word == , id]
-#                              )
+write.csv(tableWord, "../results/tables/tableBigrams.csv")
 ```

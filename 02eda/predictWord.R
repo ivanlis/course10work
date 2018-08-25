@@ -18,19 +18,34 @@ loadDatabase <- function(ngramPath = "../results/tables")
 predictWord <- function(database, string)
 {
     words <- tail(strsplit(tolower(string), "\\s+", fixed = FALSE, perl = TRUE)[[1]], 2)
-    bigrams <- ((merge(database$unigram[word == words[2], .(id, word)], 
-                     database$bigram, by.x = "id", by.y = "id1")
-                [,.(id2, probability)])[order(-probability)])[1:min(bigramsToSuggest, .N)]
     
     
-                 
-    trigrams <- ((merge(merge(database$unigram[word == words[1], .(id, word)], 
-                      database$trigram, by.x = "id", by.y = "id1")[, .(id2, id3, probability)],
-                      
-                      database$unigram[word == words[2], .(id, word)],
-                      by.x = "id2", by.y = "id")
-                [,.(id3, probability)])[order(-probability)])[1:min(trigramsToSuggest, .N)]
+    bigramResult <- character(0)
+    trigramResult <- character(0)
     
-    list(bigramWords = database$unigram[id %in% bigrams$id2, word],
-         trigramWords = database$unigram[id %in% trigrams$id3, word])
+    if (length(words) >= 1)
+    {
+        searchWord1 <- words[length(words)]
+        
+        bigrams <- ((merge(database$unigram[word == searchWord1, .(id, word)], 
+                         database$bigram, by.x = "id", by.y = "id1")
+                    [,.(id2, probability)])[order(-probability)])[1:min(bigramsToSuggest, .N)]
+        bigramResult <- database$unigram[id %in% bigrams$id2, word]
+        
+        if (length(words) >= 2)
+        {
+            searchWord2 <- words[length(words) - 1]
+            
+            trigrams <- ((merge(merge(database$unigram[word == searchWord2, .(id, word)], 
+                                      database$trigram, by.x = "id", by.y = "id1")
+                                [, .(id2, id3, probability)],
+                                
+                                database$unigram[word == searchWord1, .(id, word)],
+                                by.x = "id2", by.y = "id")
+                          [,.(id3, probability)])[order(-probability)])[1:min(trigramsToSuggest, .N)]            
+            trigramResult <- database$unigram[id %in% trigrams$id3, word]
+        }
+    }
+    
+    list(bigramWords = bigramResult, trigramWords = trigramResult)
 }

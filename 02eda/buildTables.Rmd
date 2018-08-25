@@ -27,7 +27,7 @@ tableWord <- data.table(id = 1:K1,
                         word = names(freqs[1:K1]), probability = freqs[1:K1])
 setkey(tableWord, id)
 rm(freqs)
-write.csv(tableWord, "../results/tables/tableWords.csv", row.names = FALSE)
+write.csv(tableWord, "../results/tables/tableWord.csv", row.names = FALSE)
 #rm(tableWord)
 ```
 
@@ -120,12 +120,12 @@ setnames(freqs, old = c("id"), new = c("id3"))
 freqs <- freqs[, -c("term3")]
 setkey(freqs, id1, id2, id3)
 
-# now, leave only those trigrams that start at a bigram present in the bigram table
-tableBigram <- fread("../results/tables/tableBigram.csv")
-freqs <- merge(freqs, tableBigram[, .(id1, id2)], 
-               by.x = c("id1", "id2"), by.y = c("id1", "id2"))
+## now, leave only those trigrams that start at a bigram present in the bigram table
+#tableBigram <- fread("../results/tables/tableBigram.csv")
+#freqs <- merge(freqs, tableBigram[, .(id1, id2)], 
+#               by.x = c("id1", "id2"), by.y = c("id1", "id2"))
 
-rm(tableBigram)
+#rm(tableBigram)
 rm(tableWord)
 
 #TODO: filtering

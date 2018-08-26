@@ -67,13 +67,15 @@ buildTokens <- function(tokSource,
                        ngrams = ngramType
         )
         
-        cat("Removing number containing words from tokens...\n")
-        toks <- tokens_remove(toks, "[0-9]", valuetype = "regex", verbose=3)
-        #cat("Removing profane words...\n")
-        #toks <- tokens_remove(toks, badWords, valuetype = "regex", verbose=3)
-        
         cat("Removing profane words...\n")
         toks <- tokens_remove(toks, ";;;censored;;;", valuetype = "regex", verbose=3)        
+        
+        cat("Removing number and symbol containing words from tokens...\n")
+        #toks <- tokens_remove(toks, "[0-9]", valuetype = "regex", verbose=3)
+        regex <- "[^a-z-'_]"
+        if (ngramType == 1)
+            regex <- "[^a-z-']"
+        toks <- tokens_remove(toks, regex, valuetype = "regex", verbose=3)
         
         tokFileName <- sprintf("%s/tokens%d_%02d.dat", tokensDirectory, ngramType, cnt)
     }
@@ -111,8 +113,9 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
                         buildTokens = FALSE,
                         buildMatrices = TRUE,
                         mergeMatrices = FALSE,
-                        mergeFiltered = TRUE,
-                        filterSteps = c(3, 8, 14))
+                        mergeFiltered = FALSE,
+                        filterSteps = c(3, 8, 14),
+                        ngramTypes = 1:3)
 {
     resultMatrix <- NA
     
@@ -149,7 +152,7 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
             rawToks <- buildTokens(partCorpus, badWords, cnt, tokensDirectory, 
                                    ngramType = 1, rawTok = TRUE)
             cat("Raw tokens built.\n")
-            for (ngramType in 1:3)
+            for (ngramType in ngramTypes)
             {
                 cat("Building filtered tokens for ngramType =", ngramType, "\n")
                 toks <- buildTokens(rawToks, badWords, cnt, tokensDirectory,
@@ -172,7 +175,7 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
     {
         cat("Building DFMs from saved tokens, directory", tokensDirectory, "...\n")
         
-        for (ngramType in 1:3)
+        for (ngramType in ngramTypes)
         {
             files <- list.files(tokensDirectory, 
                                 pattern = sprintf("tokens%d_.*.dat", ngramType), 
@@ -203,7 +206,7 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
     if (mergeMatrices)
     {
         cat("Building overall DFM from saved DFMs, directory", matrixDirectory, "...\n")
-        for (ngramType in 1:3)
+        for (ngramType in ngramTypes)
         #for (ngramType in 3:3)
         {
             resultMatrix <- NA
@@ -241,7 +244,7 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
                     ":  dim(resultMatrix) =", dim(resultMatrix), "\n")
                 
                 
-                if (ngramType == 3 && cnt %in% c(filterSteps, length(files) - 1))
+                if (ngramType >= 3 && cnt %in% c(filterSteps, length(files) - 1))
                 {
                     filterMatrix(resultMatrix, cnt, keepTokens = 0.6, 
                                  matrixDirectory = matrixDirectory, 
@@ -269,55 +272,57 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
     
     if (mergeFiltered)
     {
-        ngramType = 3
-        
-        resultMatrix <- NA
-        
-        files <- list.files(matrixDirectory, 
-                            pattern = sprintf("filtered_dfm%d_.*.dat", ngramType), 
-                            full.names = TRUE,
-                            recursive = FALSE)   
-        cnt <- 0
-        for (f in files)
+        for (ngramType in 4:4)
+        #for (ngramType in 3:4)
+        #ngramType = 3
         {
-            matrFile <- file(f, "r")
-            cat("Reading DFM for id=", cnt, "from", f, "...\n")
-            newMatrix <- unserialize(matrFile)
-            close(matrFile)
-            cat("DFM for id=", cnt, "read.\n")
+            resultMatrix <- NA
             
-            cat("Grouping all rows...\n")
-            newMatrix <- dfm_group(newMatrix, groups = rep(1, nrow(newMatrix)))
-            cat("All rows grouped.\n")
+            files <- list.files(matrixDirectory, 
+                                pattern = sprintf("filtered_dfm%d_.*.dat", ngramType), 
+                                full.names = TRUE,
+                                recursive = FALSE)   
+            cnt <- 0
+            for (f in files)
+            {
+                matrFile <- file(f, "r")
+                cat("Reading DFM for id=", cnt, "from", f, "...\n")
+                newMatrix <- unserialize(matrFile)
+                close(matrFile)
+                cat("DFM for id=", cnt, "read.\n")
+                
+                cat("Grouping all rows...\n")
+                newMatrix <- dfm_group(newMatrix, groups = rep(1, nrow(newMatrix)))
+                cat("All rows grouped.\n")
+                
+                if (is.dfm(resultMatrix))
+                {
+                    resultMatrix <- rbind(resultMatrix, newMatrix)
+                    resultMatrix <- dfm_group(resultMatrix, groups = rep(1, nrow(resultMatrix)))
+                }
+                else
+                    resultMatrix <- newMatrix
+                
+                rm(newMatrix)
+                
+                cat("Iteration ", cnt, ", ngramType =", ngramType, 
+                    ":  dim(resultMatrix) =", dim(resultMatrix), "\n")
+                cnt <- cnt + 1
+            }
+            
             
             if (is.dfm(resultMatrix))
             {
-                resultMatrix <- rbind(resultMatrix, newMatrix)
-                resultMatrix <- dfm_group(resultMatrix, groups = rep(1, nrow(resultMatrix)))
-            }
-            else
-                resultMatrix <- newMatrix
-            
-            rm(newMatrix)
-            
-            cat("Iteration ", cnt, ", ngramType =", ngramType, 
-                ":  dim(resultMatrix) =", dim(resultMatrix), "\n")
-            cnt <- cnt + 1
+                genMatrFileName <- sprintf("%s/generalDfm%d.dat", 
+                                           matrixDirectory, ngramType)
+                genMatrFile <- file(genMatrFileName, "w")
+                cat("Saving general DFM for ngramType = ", ngramType, "...\n")
+                serialize(resultMatrix, genMatrFile)
+                close(genMatrFile)
+                cat("General DFM for ngramType = ", ngramType, "saved.\n")
+                rm(resultMatrix)
+            }        
         }
-        
-        
-        if (is.dfm(resultMatrix))
-        {
-            genMatrFileName <- sprintf("%s/generalDfm%d.dat", 
-                                       matrixDirectory, ngramType)
-            genMatrFile <- file(genMatrFileName, "w")
-            cat("Saving general DFM for ngramType = ", ngramType, "...\n")
-            serialize(resultMatrix, genMatrFile)
-            close(genMatrFile)
-            cat("General DFM for ngramType = ", ngramType, "saved.\n")
-            rm(resultMatrix)
-        }        
-        
     }    
     
 }

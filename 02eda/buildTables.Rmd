@@ -126,7 +126,7 @@ setkey(freqs, id1, id2, id3)
 #               by.x = c("id1", "id2"), by.y = c("id1", "id2"))
 
 #rm(tableBigram)
-rm(tableWord)
+#rm(tableWord)
 
 #TODO: filtering
 K3 <- 10
@@ -138,4 +138,81 @@ rm(freqs)
 
 write.csv(tableTrigram, "../results/tables/tableTrigram.csv", row.names = FALSE)
 rm(tableTrigram)
+```
+
+## 4-grams
+
+```{r}
+freqs <- loadFrequencies("../results/dfm/generalDfm4.dat", "../results/dfm/freq4.dat")
+freqs <- data.table(term1 = sapply(names(freqs), 
+                                   function(el){
+                                       splitRes <- strsplit(el, "_")[[1]]
+                                       if (length(splitRes) != 4)
+                                           ""
+                                       else
+                                           splitRes[1]
+                                   }, USE.NAMES = FALSE),
+                    term2 = sapply(names(freqs), 
+                                   function(el){
+                                       splitRes <- strsplit(el, "_")[[1]]
+                                       if (length(splitRes) != 4)
+                                           ""
+                                       else
+                                           splitRes[2]
+                                    }, USE.NAMES = FALSE),
+                    term3 = sapply(names(freqs), 
+                                   function(el){
+                                       splitRes <- strsplit(el, "_")[[1]]
+                                       if (length(splitRes) != 4)
+                                           ""
+                                       else
+                                           splitRes[3]
+                                    }, USE.NAMES = FALSE),
+                    term4 = sapply(names(freqs), 
+                                   function(el){
+                                       splitRes <- strsplit(el, "_")[[1]]
+                                       if (length(splitRes) != 4)
+                                           ""
+                                       else
+                                           splitRes[4]
+                                    }, USE.NAMES = FALSE),
+                    
+                    probability = freqs)
+setkey(freqs, term1, term2, term3, term4)
+
+# remove rows with empty terms resulting from extra underscores like ___cat or dog___
+freqs <- freqs[nchar(term1) > 0 & nchar(term2) > 0]
+
+freqs <- merge(freqs, tableWord[, .(id, word)], by.x = "term1", by.y = "word")
+setnames(freqs, old = c("id"), new = c("id1"))
+freqs <- freqs[, -c("term1")]
+freqs <- merge(freqs, tableWord[, .(id, word)], by.x = "term2", by.y = "word")
+setnames(freqs, old = c("id"), new = c("id2"))
+freqs <- freqs[, -c("term2")]
+freqs <- merge(freqs, tableWord[, .(id, word)], by.x = "term3", by.y = "word")
+setnames(freqs, old = c("id"), new = c("id3"))
+freqs <- freqs[, -c("term3")]
+freqs <- merge(freqs, tableWord[, .(id, word)], by.x = "term4", by.y = "word")
+setnames(freqs, old = c("id"), new = c("id4"))
+freqs <- freqs[, -c("term4")]
+setkey(freqs, id1, id2, id3, id4)
+
+## now, leave only those trigrams that start at a bigram present in the bigram table
+#tableBigram <- fread("../results/tables/tableBigram.csv")
+#freqs <- merge(freqs, tableBigram[, .(id1, id2)], 
+#               by.x = c("id1", "id2"), by.y = c("id1", "id2"))
+
+#rm(tableBigram)
+rm(tableWord)
+
+#TODO: filtering
+K4 <- 10
+#TODO: think on filtering policy
+freqs <- freqs[order(-probability), .SD[1:min(K4, .N)], by = .(id1, id2, id3)]
+
+tableFourgram <- freqs
+rm(freqs)
+
+write.csv(tableFourgram, "../results/tables/tableFourgram.csv", row.names = FALSE)
+rm(tableFourgram)
 ```

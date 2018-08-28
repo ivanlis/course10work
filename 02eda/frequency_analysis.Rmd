@@ -169,6 +169,40 @@ Among our fitered trigrams, these are the less frequent:
 tail(freqs, 10)
 ```
 
+
+```{r message=FALSE, echo=FALSE}
+freqs <- loadFrequencies("../results/dfm/generalDfm4.dat", "../results/dfm/freq4.dat")
+
+## Look for 50% and 90%
+#threshold50 <- 0.5 * sum(freqs)
+#threshold90 <- 0.9 * sum(freqs)
+#
+#sufficient50 <- sum(cumsum(freqs) < threshold50) + 1
+#sufficient90 <- sum(cumsum(freqs) < threshold90) + 1
+
+#dsize <- length(freqs)
+# at the moment, the sufficient90 for bigrams
+dsize <- min(sufficient90 + 100, length(freqs))
+
+g <- g + geom_line(data = data.frame(x = log(1:dsize), y = log(freqs[1:dsize])), 
+                                    mapping = aes(x = x, y = y), color = "black")
+```
+
+At the preprocessing step we filtered out the less frequent 4-grams.
+Now we keep `r length(freqs)` of different features. These features account for `r sum(freqs)` entries.
+The most frequent 4-grams are the following:
+
+```{r  message=FALSE, echo=FALSE}
+head(freqs, 20)
+```
+
+Among our fitered 4-grams, these are the less frequent:
+
+```{r message=FALSE, echo=FALSE}
+tail(freqs, 10)
+```
+
+
 Let's show the frequencies of the words, bigrams and trigrams on the same graph,
 using a logarithmic scale.
 

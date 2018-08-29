@@ -272,8 +272,8 @@ prepareEda <- function(textDirectory = defaultTextDirectory,
     
     if (mergeFiltered)
     {
-        for (ngramType in 4:4)
-        #for (ngramType in 3:4)
+        #for (ngramType in 4:4)
+        for (ngramType in 3:4)
         #ngramType = 3
         {
             resultMatrix <- NA

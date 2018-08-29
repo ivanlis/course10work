@@ -1,3 +1,5 @@
+library(quanteda)
+
 loadFrequencies <- function(pathName, freqPathname, update = FALSE)
 {
     if (!file.exists(freqPathname) || update)

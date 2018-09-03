@@ -56,7 +56,7 @@ loadFrequencies <- function(pathName, freqPathname, update = FALSE)
 ## Frequencies of words, bigrams and trigrams in the entire corpus
 
 Here we explore how frequently different terms occur in the merged corpus
-comprising the texts from blogs, news and twits.
+comprising the texts from blogs, news and tweets.
 Let's take a look at words first.
 
 ```{r message=FALSE, echo=FALSE}
@@ -210,3 +210,4 @@ using a logarithmic scale.
 rm(freqs)
 g
 ```
+
